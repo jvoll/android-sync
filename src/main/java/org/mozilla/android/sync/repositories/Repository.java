@@ -1,17 +1,22 @@
 package org.mozilla.android.sync.repositories;
 
-import org.mozilla.android.sync.repositories.domain.Record;
+import android.content.Context;
 
-
-public interface Repository {
+// TODO: For now we are only concerned with android repos...eventually I'll need
+// to implement this for both a server repo and an android repo
+public abstract class Repository {
   
-  public void guidsSince(long timestamp, RepositoryCallbackReceiver receiver);
-  public void fetchSince(long timestamp, RepositoryCallbackReceiver receiver);
-  public void fetch(String[] guids, RepositoryCallbackReceiver receiver);
-  public long store(Record record);
-  public void wipe(RepositoryCallbackReceiver receiver);
-  public void begin(RepositoryCallbackReceiver receiver);
-  public void finish(RepositoryCallbackReceiver receiver);
+  private CollectionType collection;
   
+  public Repository(CollectionType collection) {
+    this.setCollection(collection);
+  }
+  public abstract void createSession(SyncCallbackReceiver callbackMechanism, Context context);
   
+  public CollectionType getCollection() {
+    return collection;
+  }
+  public void setCollection(CollectionType collection) {
+    this.collection = collection;
+  }
 }

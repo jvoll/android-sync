@@ -8,15 +8,18 @@ import org.mozilla.android.sync.repositories.domain.Record;
 import android.content.Context;
 import android.database.Cursor;
 
-public class AndroidBookmarksRepository implements Repository {
+public class BookmarksRepositorySession extends RepositorySession {
 
   BookmarksDatabaseHelper dbHelper;
   
-  public AndroidBookmarksRepository(Context context) {
+  public BookmarksRepositorySession(Repository repository, 
+      SyncCallbackReceiver callbackReciever, Context context) {
+    super(repository, callbackReciever);
     dbHelper = new BookmarksDatabaseHelper(context);
   }
   
   // guids since method and thread
+  @Override
   public void guidsSince(long timestamp, RepositoryCallbackReceiver receiver) {
     GuidsSinceThread thread = new GuidsSinceThread(timestamp, receiver, dbHelper);
     thread.start();
@@ -54,6 +57,7 @@ public class AndroidBookmarksRepository implements Repository {
     }
   }
 
+  @Override
   // Fetch since method and thread
   public void fetchSince(long timestamp, RepositoryCallbackReceiver receiver) {
     FetchSinceThread thread = new FetchSinceThread(timestamp, receiver);
@@ -87,6 +91,7 @@ public class AndroidBookmarksRepository implements Repository {
     }
   }
 
+  @Override
   // Fetch method and thread
   public void fetch(String[] guids, RepositoryCallbackReceiver receiver) {
     FetchThread thread = new FetchThread(guids, receiver);
@@ -121,6 +126,7 @@ public class AndroidBookmarksRepository implements Repository {
   // than just doing the operation here (and old code doesn't
   // use async here)
   // return the id of the inserted value
+  @Override
   public long store(Record record) {
     long id = dbHelper.insertBookmark((BookmarkRecord) record);
     return id;
@@ -130,6 +136,7 @@ public class AndroidBookmarksRepository implements Repository {
   // Right now doing this async probably seems silly,
   // but I imagine it might be worth it once the implmentation
   // of this is complete (plus I'm sticking with past conventions)
+  @Override
   public void wipe(RepositoryCallbackReceiver receiver) {
     WipeThread thread = new WipeThread(receiver);
     thread.start();
@@ -151,11 +158,13 @@ public class AndroidBookmarksRepository implements Repository {
     }
   }
 
+  @Override
   public void begin(RepositoryCallbackReceiver receiver) {
     // TODO Auto-generated method stub
     
   }
 
+  @Override
   public void finish(RepositoryCallbackReceiver receiver) {
     // TODO Auto-generated method stub
     
