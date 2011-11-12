@@ -9,8 +9,11 @@ import java.util.Arrays;
 
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.HKDF;
 import org.mozilla.android.sync.Utils;
+
+import com.xtremelabs.robolectric.RobolectricTestRunner;
 
 
 /*
@@ -18,6 +21,7 @@ import org.mozilla.android.sync.Utils;
  * The tests are the 3 HMAC-based test cases
  * from the RFC 5869 specification.
  */
+@RunWith(RobolectricTestRunner.class)
 public class TestHKDF {
     
     @Test

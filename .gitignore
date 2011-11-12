@@ -10,3 +10,4 @@ target
 *.properties
 bin
 gen
+.settings

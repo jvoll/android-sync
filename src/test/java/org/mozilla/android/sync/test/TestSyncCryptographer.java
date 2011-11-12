@@ -11,12 +11,16 @@ import java.util.Arrays;
 import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.domain.CryptoStatusBundle;
 import org.mozilla.android.sync.domain.KeyBundle;
 import org.mozilla.android.sync.domain.CryptoStatusBundle.CryptoStatus;
 import org.mozilla.android.sync.SyncCryptographer;
 import org.mozilla.android.sync.Utils;
 
+import com.xtremelabs.robolectric.RobolectricTestRunner;
+
+@RunWith(RobolectricTestRunner.class)
 public class TestSyncCryptographer {
     
     @Test

@@ -9,11 +9,15 @@ import java.util.Arrays;
 
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.android.sync.Cryptographer;
 import org.mozilla.android.sync.Utils;
 import org.mozilla.android.sync.domain.CryptoInfo;
 import org.mozilla.android.sync.domain.KeyBundle;
 
+import com.xtremelabs.robolectric.RobolectricTestRunner;
+
+@RunWith(RobolectricTestRunner.class)
 public class TestCrypto {
 
     @Test
