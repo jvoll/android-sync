@@ -53,8 +53,12 @@
 		</plugin>
 		<plugin>
 		    <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+		    <!--
 		    <artifactId>android-maven-plugin</artifactId>
 		    <version>3.0.0-alpha-13</version>
+		    -->
+		    <artifactId>maven-android-plugin</artifactId>
+		    <version>2.8.4</version>
 		    <configuration>
 			<sdk>
 			    <!-- platform or api level (api level 14)-->

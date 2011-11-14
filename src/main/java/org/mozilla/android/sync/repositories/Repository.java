@@ -11,7 +11,7 @@ public abstract class Repository {
   public Repository(CollectionType collection) {
     this.setCollection(collection);
   }
-  public abstract void createSession(SyncCallbackReceiver callbackMechanism, Context context);
+  public abstract void createSession(Context context, SyncCallbackReceiver callbackMechanism);
   
   public CollectionType getCollection() {
     return collection;

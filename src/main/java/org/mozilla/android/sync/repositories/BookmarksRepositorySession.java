@@ -46,13 +46,16 @@ public class BookmarksRepositorySession extends RepositorySession {
       int index = cur.getColumnIndex(BookmarksDatabaseHelper.COL_GUID);
      
       ArrayList<String> guids = new ArrayList<String>();
-      
+      boolean empty = cur.moveToFirst();
       while (cur.isAfterLast() == false) {
         guids.add(cur.getString(index));
         cur.moveToNext();
       }
       
-      callbackReceiver.guidsSinceCallback(RepoStatusCode.DONE, (String[]) guids.toArray());
+      String guidsArray[] = new String[guids.size()];
+      guids.toArray(guidsArray);
+      
+      callbackReceiver.guidsSinceCallback(RepoStatusCode.DONE, guidsArray);
       
     }
   }
