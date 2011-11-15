@@ -12,6 +12,7 @@ import org.mozilla.android.sync.repositories.CollectionType;
 import org.mozilla.android.sync.repositories.RepoStatusCode;
 import org.mozilla.android.sync.repositories.Utils;
 import org.mozilla.android.sync.repositories.domain.BookmarkRecord;
+import org.mozilla.android.sync.repositories.domain.Record;
 import org.mozilla.android.sync.test.CallbackResult.CallType;
 
 import android.content.Context;
@@ -103,9 +104,8 @@ public class TestAndroidBookmarksRepo {
   
   // TODO Test for guids since where some should come back and some shouldn't
   
-  /*
   @Test
-  public void testFetchGuid() {
+  public void testFetchRecordForGuid() {
     // Create two records and store them
     BookmarkRecord record = createBookmark1();
     String guid = record.getGuid();
@@ -115,10 +115,46 @@ public class TestAndroidBookmarksRepo {
     System.out.println("Stored record with id: " + result.getRowId());
     
     // Fetch record with guid from above and ensure we only get back one record
-    //testWrapper.do
+    result = testWrapper.doFetchSync(session, new String[] { guid });
+    System.out.println("Number of records returned: " + result.getRecords().length);
+    
+    assertEquals(CallType.FETCH, result.getCallType());
+    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
+    
+    // Check that only one record was returned and that it is the correct one
+    Record[] returnedRecords = result.getRecords();
+    assertEquals(1, returnedRecords.length);
+    BookmarkRecord fetched = (BookmarkRecord) returnedRecords[0];
+    assertEquals(guid, fetched.getGuid());
+    assertEquals(record.getBmkUri(), fetched.getBmkUri());
+    assertEquals(record.getDescription(), fetched.getDescription());
+    assertEquals(record.getTitle(), fetched.getTitle());
     
   }
-  */
+  
+  // TODO Test for retrieving multiple guids
+  
+  @Test
+  public void testFetchSince() {
+    // Create two records and store them
+    BookmarkRecord record = createBookmark1();
+    CallbackResult result = testWrapper.doStoreSync(session, record);
+    System.out.println("Stored record with id: " + result.getRowId());
+    result = testWrapper.doStoreSync(session, createBookmark2());
+    System.out.println("Stored record with id: " + result.getRowId());
+    
+    // Fetch record with guid from above and ensure we only get back one record
+    result = testWrapper.doFetchSinceSync(session, (System.currentTimeMillis() - 10000000)/1000);
+    System.out.println("Number of records returned: " + result.getRecords().length);
+    
+    assertEquals(CallType.FETCH_SINCE, result.getCallType());
+    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
+    
+    // Check that both records were returned
+    Record[] returnedRecords = result.getRecords();
+    assertEquals(2, returnedRecords.length);
+    
+  }
   
   // TODO Test for retrieving multiple guids
   

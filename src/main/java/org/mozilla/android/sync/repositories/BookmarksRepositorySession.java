@@ -129,7 +129,7 @@ public class BookmarksRepositorySession extends RepositorySession {
       Record[] recordArray = new Record[records.size()];
       records.toArray(recordArray);
       
-      callbackReceiver.fetchSinceCallback(RepoStatusCode.DONE, recordArray);
+      callbackReceiver.fetchCallback(RepoStatusCode.DONE, recordArray);
     }
   }
   

@@ -19,7 +19,7 @@ public class BookmarksSessionTestWrapper {
    */
 
   private CallbackResult testResult;
-  private static final int WAIT_TIMEOUT = 5000;
+  private static final int WAIT_TIMEOUT = 1000;
   
   public CallbackResult doCreateSessionSync(BookmarksRepository repository, Context context) {
     
@@ -82,7 +82,7 @@ public class BookmarksSessionTestWrapper {
     }
 
     public void fetchCallback(RepoStatusCode status, Record[] records) {
-      testResult = new CallbackResult(status, CallType.FETCH_SINCE, records);
+      testResult = new CallbackResult(status, CallType.FETCH, records);
       notifyWaitingThreads();
     }
     
