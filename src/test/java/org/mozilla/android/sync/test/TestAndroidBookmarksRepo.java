@@ -3,6 +3,7 @@ package org.mozilla.android.sync.test;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.android.sync.MainActivity;
@@ -10,6 +11,8 @@ import org.mozilla.android.sync.repositories.BookmarksRepository;
 import org.mozilla.android.sync.repositories.BookmarksRepositorySession;
 import org.mozilla.android.sync.repositories.CollectionType;
 import org.mozilla.android.sync.repositories.RepoStatusCode;
+import org.mozilla.android.sync.repositories.Repository;
+import org.mozilla.android.sync.repositories.SyncCallbackReceiver;
 import org.mozilla.android.sync.repositories.Utils;
 import org.mozilla.android.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.android.sync.repositories.domain.Record;
@@ -24,6 +27,13 @@ public class TestAndroidBookmarksRepo {
 
   private BookmarksRepositorySession session;
   private BookmarksSessionTestWrapper testWrapper;
+  private static String parentId;
+  private static String parentName = "Menu";
+  
+  @BeforeClass
+  public static void oneTimeSetUp() {
+    parentId = Utils.generateGuid();
+  }
   
   @Before
   public void setUp() {
@@ -32,7 +42,7 @@ public class TestAndroidBookmarksRepo {
     setTestWrapper(new BookmarksSessionTestWrapper());
     
     // Create the session used by tests
-    BookmarksRepository repo = new BookmarksRepository(CollectionType.Bookmarks);
+    BookmarksRepository repo = (BookmarksRepository) Repository.makeRepository(CollectionType.Bookmarks);
     Context context = new MainActivity().getApplicationContext();
     CallbackResult result = testWrapper.doCreateSessionSync(repo, context);
     
@@ -46,18 +56,59 @@ public class TestAndroidBookmarksRepo {
     
   }
   
+  /*
+   * Tests for createSession
+   */
   @Test
-  public void testStore() {
-    
-    // Create a record to store
-    CallbackResult result = getTestWrapper().doStoreSync(session, createBookmark1());
-    
-    System.out.println("Stored a record and got back id: " + result.getRowId());
-    
-    assertEquals(CallType.STORE, result.getCallType());
-    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
+  public void testCreateSessionNullContext() {
+    BookmarksRepository repo = (BookmarksRepository) Repository.makeRepository(CollectionType.Bookmarks);
+    CallbackResult result = testWrapper.doCreateSessionSync(repo, null);
+    assertEquals(RepoStatusCode.NULL_CONTEXT, result.getStatusCode());
   }
   
+  /*
+   * Tests for store
+   * 
+   * Test storing a record for each different type of Bookmark record
+   */
+  @Test
+  public void testStoreBookmark() {
+    CallbackResult result = getTestWrapper().doStoreSync(session, createBookmark1());
+    verifyStoreResult(result);
+  }
+  
+  @Test
+  public void testStoreMicrosummary() {
+    CallbackResult result = getTestWrapper().doStoreSync(session, createMicrosummary());
+    verifyStoreResult(result);
+  }
+  
+  @Test
+  public void testStoreQuery() {
+    CallbackResult result = getTestWrapper().doStoreSync(session, createQuery());
+    verifyStoreResult(result);
+  }
+  
+  @Test
+  public void testStoreFolder() {
+    CallbackResult result = getTestWrapper().doStoreSync(session, createFolder());
+    verifyStoreResult(result);
+  }
+  
+  @Test
+  public void testStoreLivemark() {
+    CallbackResult result = getTestWrapper().doStoreSync(session, createLivemark());
+    verifyStoreResult(result);
+  }
+  
+  @Test
+  public void testStoreSeparator() {
+    CallbackResult result = getTestWrapper().doStoreSync(session, createSeparator());
+    verifyStoreResult(result);
+  }
+  
+  // TODO not sure whether it is worth leaving this in, probably never actually need
+  // this call for anything. I wrote it for testing and existing clients don't use it.
   @Test
   public void testFetchAll() {
     
@@ -158,25 +209,121 @@ public class TestAndroidBookmarksRepo {
   
   // TODO Test for retrieving multiple guids
   
-  // Helpers
+  /*
+   * Helpers for creating bookmark records of different types
+   */
   private static BookmarkRecord createBookmark1() {
     BookmarkRecord record = new BookmarkRecord();
+    record.setGuid(Utils.generateGuid());
+    record.setTitle("Foo!!!");
     record.setBmkUri("http://foo.bar.com");
     record.setDescription("This is a description for foo.bar.com");
+    record.setLoadInSidebar(true);
+    record.setTags("[\"tag1\", \"tag2\", \"tag3\"]");
+    record.setKeyword("fooooozzzzz");
+    record.setParentId(parentId);
+    record.setParentName(parentName);
     record.setType("bookmark");
-    record.setTitle("Foo!!!");
-    record.setGuid(Utils.generateGuid());
     return record;
   }
   
   private static BookmarkRecord createBookmark2() {
     BookmarkRecord record = new BookmarkRecord();
-    record.setBmkUri("http://boo.bar.com");
-    record.setDescription("Describe boo.bar.com");
-    record.setType("bookmark");
-    record.setTitle("boo!!!");
     record.setGuid(Utils.generateGuid());
+    record.setTitle("Bar???");
+    record.setBmkUri("http://bar.foo.com");
+    record.setDescription("This is a description for Bar???");
+    record.setLoadInSidebar(false);
+    record.setTags("[\"tag1\", \"tag2\"]");
+    record.setKeyword("keywordzzz");
+    record.setParentId(parentId);
+    record.setParentName(parentName);
+    record.setType("bookmark");
     return record;
+  }
+  
+  private static BookmarkRecord createMicrosummary() {
+    BookmarkRecord record = new BookmarkRecord();
+    record.setGuid(Utils.generateGuid());
+    record.setGeneratorUri("http://generatoruri.com");
+    record.setStaticTitle("Static Microsummary Title");
+    record.setTitle("Microsummary 1");
+    record.setBmkUri("www.bmkuri.com");
+    record.setDescription("microsummary description");
+    record.setLoadInSidebar(false);
+    record.setTags("[\"tag1\", \"tag2\"]");
+    record.setKeyword("keywordzzz");
+    record.setParentId(parentId);
+    record.setParentName(parentName);
+    record.setType("microsummary");
+    return record;
+  }
+  
+  private static BookmarkRecord createQuery() {
+    BookmarkRecord record = new BookmarkRecord();
+    record.setGuid(Utils.generateGuid());
+    record.setFolderName("Query Folder Name");
+    record.setQueryId("OptionalQueryId");
+    record.setTitle("Query 1");
+    record.setBmkUri("http://www.query.com");
+    record.setDescription("Query 1 description");
+    record.setLoadInSidebar(true);
+    record.setTags("[]");
+    record.setKeyword("queryKeyword");
+    record.setParentId(parentId);
+    record.setParentName(parentName);
+    record.setType("query");
+    return record;
+  }
+  
+  private static BookmarkRecord createFolder() {
+    // Make this the Menu folder since each DB will
+    // have at least this folder
+    BookmarkRecord record = new BookmarkRecord();
+    record.setGuid(parentId);
+    record.setTitle(parentName);
+    // No parent since this is the menu folder
+    record.setParentId("");
+    record.setParentName("");
+    // TODO verify how we want to store these string arrays
+    // pretty sure I verified that this is actually how other clients do it, but double check
+    record.setChildren("[\"" + Utils.generateGuid() + "\", \"" + Utils.generateGuid() + "\"]");
+    record.setType("folder");
+    return record;
+  }
+  
+  private static BookmarkRecord createLivemark() {
+    BookmarkRecord record = new BookmarkRecord();
+    record.setGuid(Utils.generateGuid());
+    record.setSiteUri("http://site.uri.com");
+    record.setFeedUri("http://rss.site.uri.com");
+    record.setTitle("Livemark title");
+    record.setParentId(parentId);
+    record.setParentName(parentName);
+    // TODO verify how we want to store these string arrays
+    // pretty sure I verified that this is actually how other clients do it, but double check
+    record.setChildren("[\"" + Utils.generateGuid() + "\", \"" + Utils.generateGuid() + "\"]");
+    record.setType("livemark");
+    return record;
+  }
+  
+  private static BookmarkRecord createSeparator() {
+    BookmarkRecord record = new BookmarkRecord();
+    record.setGuid(Utils.generateGuid());
+    record.setPos("3");
+    record.setParentId(parentId);
+    record.setParentName(parentName);
+    record.setType("separator");
+    return record;
+  }
+  
+  /*
+   * Other helpers
+   */
+  private void verifyStoreResult(CallbackResult result) {
+    assert(result.getRowId() != CallbackResult.DEFAULT_ROW_ID);
+    assertEquals(CallType.STORE, result.getCallType());
+    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
   }
   
   // Accessors and mutators

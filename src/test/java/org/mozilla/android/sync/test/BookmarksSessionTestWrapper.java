@@ -19,7 +19,7 @@ public class BookmarksSessionTestWrapper {
    */
 
   private CallbackResult testResult;
-  private static final int WAIT_TIMEOUT = 1000;
+  private static final int WAIT_TIMEOUT = 500;
   
   public CallbackResult doCreateSessionSync(BookmarksRepository repository, Context context) {
     
@@ -62,6 +62,10 @@ public class BookmarksSessionTestWrapper {
   private void performWait() {
     synchronized(this) {
       try {
+        // TODO: This isn't working properly. For some reason
+        // it always goes right up until the timeout, the notify
+        // isn't waking up this thread, which would make the tests
+        // run quicker if it did!
         this.wait(WAIT_TIMEOUT);
       } catch (InterruptedException e) {
         e.printStackTrace();

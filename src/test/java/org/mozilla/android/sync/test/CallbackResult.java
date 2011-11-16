@@ -11,6 +11,8 @@ import org.mozilla.android.sync.repositories.domain.Record;
  * in our JUnit tests.
  */
 public class CallbackResult {
+  
+  public static long DEFAULT_ROW_ID = -1;
 
   public enum CallType {
     FETCH,
@@ -38,7 +40,7 @@ public class CallbackResult {
   }
   
   public CallbackResult(RepoStatusCode statusCode, CallType callType, String[] guids) {
-    this(statusCode, callType, guids, null, -1, null);
+    this(statusCode, callType, guids, null, DEFAULT_ROW_ID, null);
   }
   
   public CallbackResult(RepoStatusCode statusCode, CallType callType, long rowId) {
@@ -46,11 +48,11 @@ public class CallbackResult {
   }
   
   public CallbackResult(RepoStatusCode statusCode, CallType callType, Record[] records) {
-    this(statusCode, callType, null, records, -1, null);
+    this(statusCode, callType, null, records, DEFAULT_ROW_ID, null);
   }
   
   public CallbackResult(RepoStatusCode statusCode, CallType callType, RepositorySession session) {
-    this(statusCode, callType, null, null, -1, session);
+    this(statusCode, callType, null, null, DEFAULT_ROW_ID, session);
   }
 
   public RepoStatusCode getStatusCode() {
