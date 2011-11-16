@@ -12,7 +12,6 @@ import org.mozilla.android.sync.repositories.BookmarksRepositorySession;
 import org.mozilla.android.sync.repositories.CollectionType;
 import org.mozilla.android.sync.repositories.RepoStatusCode;
 import org.mozilla.android.sync.repositories.Repository;
-import org.mozilla.android.sync.repositories.SyncCallbackReceiver;
 import org.mozilla.android.sync.repositories.Utils;
 import org.mozilla.android.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.android.sync.repositories.domain.Record;
@@ -107,6 +106,11 @@ public class TestAndroidBookmarksRepo {
     verifyStoreResult(result);
   }
   
+  // Test storing a record for which the guid already exists
+  // should update it instead
+  // TODO left off here. Need to actually implement this functionality
+  
+  
   // TODO not sure whether it is worth leaving this in, probably never actually need
   // this call for anything. I wrote it for testing and existing clients don't use it.
   @Test
@@ -132,31 +136,110 @@ public class TestAndroidBookmarksRepo {
     // function first to make sure there are records in there to be got.
   }
   
+  /*
+   * Tests for guids since
+   */
   @Test
-  public void testGuidsSince() {
+  public void testGuidsSinceReturnMultipleRecords() {
     
     // Create a record and store it
     CallbackResult result = testWrapper.doStoreSync(session, createBookmark1());
     System.out.println("Stored record with id: " + result.getRowId());
     
+    // Wait 2 seconds and then store 2 more records
+    perform2SecondWait();
+    long timestamp = System.currentTimeMillis()/1000;
+    
+    //  Store 2 more records
+    BookmarkRecord record2 = createLivemark();
+    result = testWrapper.doStoreSync(session, record2);
+    System.out.println("Stored record with id: " + result.getRowId());
+    BookmarkRecord record3 = createMicrosummary();
+    result = testWrapper.doStoreSync(session, record3);
+    System.out.println("Stored record with id: " + result.getRowId());
+    
     // Get records
-    result = testWrapper.doGuidsSinceSync(session, (System.currentTimeMillis() - 100000000)/1000);
+    result = testWrapper.doGuidsSinceSync(session, timestamp);
     
-    System.out.println("Number of records returned: " + result.getGuids().length);
-    
+    // Verify that only two guid comes back (record2 and record3)
+    assertEquals(2, result.getGuids().length);
+    assertEquals(record2.getGuid(), result.getGuids()[0]);
+    assertEquals(record3.getGuid(), result.getGuids()[1]);
     assertEquals(CallType.GUIDS_SINCE, result.getCallType());
     assertEquals(RepoStatusCode.DONE, result.getStatusCode());
-    
-    // TODO: Do something to check that we got some records here. Need to perform a setup
-    // function first to make sure there are records in there to be got.
   }
   
-  // TODO Test for guids since where there are none
+  @Test
+  public void testGuidsSinceReturnNoRecords() {
+    
+    // Create a record and store it
+    CallbackResult result = testWrapper.doStoreSync(session, createBookmark1());
+    System.out.println("Stored record with id: " + result.getRowId());
+    
+    // Wait 2 seconds and then store another record
+    perform2SecondWait();
+    long timestamp = System.currentTimeMillis()/1000;
+    
+    // Get records
+    result = testWrapper.doGuidsSinceSync(session, timestamp);
+    
+    // Verify that no guids come back
+    assertEquals(0, result.getGuids().length);
+    assertEquals(CallType.GUIDS_SINCE, result.getCallType());
+    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
+  }
   
-  // TODO Test for guids since where some should come back and some shouldn't
+  /*
+   * Tests for fetchSince
+   */
+  @Test
+  public void testFetchSinceOneRecord() {
+    // Create one record and store it 
+    CallbackResult result = testWrapper.doStoreSync(session, createFolder());
+    System.out.println("Stored record with id: " + result.getRowId());
+    
+    // Wait 2 seconds and then store another record
+    perform2SecondWait();
+    long timestamp = System.currentTimeMillis()/1000;
+    BookmarkRecord record2 = createBookmark2();
+    result = testWrapper.doStoreSync(session, record2);
+    System.out.println("Stored record with id: " + result.getRowId());
+    
+    // Fetch since using timestamp and ensure we only get back one record
+    result = testWrapper.doFetchSinceSync(session, timestamp);
+    
+    // Check that only one record was returned and that it is the right one
+    assertEquals(1, result.getRecords().length);
+    assertEquals(record2.getGuid(), ((BookmarkRecord) result.getRecords()[0]).getGuid());
+    assertEquals(CallType.FETCH_SINCE, result.getCallType());
+    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
+  }
   
   @Test
-  public void testFetchRecordForGuid() {
+  public void testFetchSinceReturnNoRecords() {
+    
+    // Create a record and store it
+    CallbackResult result = testWrapper.doStoreSync(session, createBookmark1());
+    System.out.println("Stored record with id: " + result.getRowId());
+    
+    // Wait 2 seconds and then store another record
+    perform2SecondWait();
+    long timestamp = System.currentTimeMillis()/1000;
+    
+    // Get records
+    result = testWrapper.doFetchSinceSync(session, timestamp);
+    
+    // Verify that no guids come back
+    assertEquals(0, result.getRecords().length);
+    assertEquals(CallType.FETCH_SINCE, result.getCallType());
+    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
+  }
+  
+  /*
+   * Tests for fetch(guid)
+   */
+  @Test
+  public void testFetchOneRecordByGuid() {
     // Create two records and store them
     BookmarkRecord record = createBookmark1();
     String guid = record.getGuid();
@@ -167,10 +250,6 @@ public class TestAndroidBookmarksRepo {
     
     // Fetch record with guid from above and ensure we only get back one record
     result = testWrapper.doFetchSync(session, new String[] { guid });
-    System.out.println("Number of records returned: " + result.getRecords().length);
-    
-    assertEquals(CallType.FETCH, result.getCallType());
-    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
     
     // Check that only one record was returned and that it is the correct one
     Record[] returnedRecords = result.getRecords();
@@ -180,34 +259,82 @@ public class TestAndroidBookmarksRepo {
     assertEquals(record.getBmkUri(), fetched.getBmkUri());
     assertEquals(record.getDescription(), fetched.getDescription());
     assertEquals(record.getTitle(), fetched.getTitle());
-    
+    assertEquals(CallType.FETCH, result.getCallType());
+    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
   }
-  
-  // TODO Test for retrieving multiple guids
   
   @Test
-  public void testFetchSince() {
-    // Create two records and store them
+  public void testFetchMultipleRecordsByGuid() {
+    // Create three records and store them
     BookmarkRecord record = createBookmark1();
+    BookmarkRecord record2 = createQuery();
+    BookmarkRecord record3 = createSeparator();
+    System.out.println("guids stored: " + record.getGuid() + " " + record2.getGuid() + " " + record3.getGuid());
     CallbackResult result = testWrapper.doStoreSync(session, record);
     System.out.println("Stored record with id: " + result.getRowId());
-    result = testWrapper.doStoreSync(session, createBookmark2());
+    result = testWrapper.doStoreSync(session, record2);
+    System.out.println("Stored record with id: " + result.getRowId());
+    result = testWrapper.doStoreSync(session, record3);
     System.out.println("Stored record with id: " + result.getRowId());
     
-    // Fetch record with guid from above and ensure we only get back one record
-    result = testWrapper.doFetchSinceSync(session, (System.currentTimeMillis() - 10000000)/1000);
-    System.out.println("Number of records returned: " + result.getRecords().length);
+    // Fetch records with 2 guids from above
+    result = testWrapper.doFetchSync(session, new String[] { record.getGuid(), record3.getGuid() });
     
-    assertEquals(CallType.FETCH_SINCE, result.getCallType());
-    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
-    
-    // Check that both records were returned
+    // Check that only one record was returned and that it is the correct one
     Record[] returnedRecords = result.getRecords();
     assertEquals(2, returnedRecords.length);
-    
+    BookmarkRecord fetched = (BookmarkRecord) returnedRecords[0];
+    BookmarkRecord fetched2 = (BookmarkRecord) returnedRecords[1];
+    assertEquals(record.getGuid(), fetched.getGuid());
+    assertEquals(record.getBmkUri(), fetched.getBmkUri());
+    assertEquals(record.getDescription(), fetched.getDescription());
+    assertEquals(record.getTitle(), fetched.getTitle());
+    assertEquals(record3.getGuid(), fetched2.getGuid());
+    assertEquals(record3.getBmkUri(), fetched2.getBmkUri());
+    assertEquals(record3.getDescription(), fetched2.getDescription());
+    assertEquals(record3.getTitle(), fetched2.getTitle());
+    assertEquals(CallType.FETCH, result.getCallType());
+    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
   }
   
-  // TODO Test for retrieving multiple guids
+  @Test
+  public void testFetchNoRecordByGuid() {
+    // Create a record and store it
+    CallbackResult result = testWrapper.doStoreSync(session, createMicrosummary());
+    System.out.println("Stored record with id: " + result.getRowId());
+    
+    // Fetch a record that doesn't exist
+    result = testWrapper.doFetchSync(session, new String[] { Utils.generateGuid() });
+    
+    // Ensure no recrods are returned
+    assertEquals(0, result.getRecords().length);
+    assertEquals(CallType.FETCH, result.getCallType());
+    assertEquals(RepoStatusCode.DONE, result.getStatusCode());
+  }
+  
+  @Test
+  public void testFetchNoGuids() {
+    
+    // Fetch with empty guids list 
+    CallbackResult result = testWrapper.doFetchSync(session, new String[] { });
+    
+    // Ensure no records are returned
+    assertEquals(RepoStatusCode.INVALID_REQUEST, result.getStatusCode());
+    assertEquals(0, result.getRecords().length);
+    assertEquals(CallType.FETCH, result.getCallType());
+  }
+  
+  @Test
+  public void testFetchNullGuids() {
+    
+    // Fetch with empty guids list 
+    CallbackResult result = testWrapper.doFetchSync(session, null);
+    
+    // Ensure no records are returned
+    assertEquals(RepoStatusCode.INVALID_REQUEST, result.getStatusCode());
+    assertEquals(0, result.getRecords().length);
+    assertEquals(CallType.FETCH, result.getCallType());
+  }
   
   /*
    * Helpers for creating bookmark records of different types
@@ -324,6 +451,16 @@ public class TestAndroidBookmarksRepo {
     assert(result.getRowId() != CallbackResult.DEFAULT_ROW_ID);
     assertEquals(CallType.STORE, result.getCallType());
     assertEquals(RepoStatusCode.DONE, result.getStatusCode());
+  }
+  
+  private void perform2SecondWait() {
+    try {
+      synchronized(this) {
+        this.wait(2000);
+      }
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
   
   // Accessors and mutators
