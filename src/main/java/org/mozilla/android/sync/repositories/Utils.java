@@ -18,5 +18,10 @@ public class Utils {
     random.nextBytes(bytes);
     return bytes;
   }
+  
+  // Returns the current epoch timestamp (in seconds)
+  public static long currentEpoch() {
+    return System.currentTimeMillis()/1000;
+  }
 
 }
