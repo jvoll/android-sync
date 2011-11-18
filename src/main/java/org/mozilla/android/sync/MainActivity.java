@@ -40,6 +40,13 @@ package org.mozilla.android.sync;
 import android.app.Activity;
 import android.os.Bundle;
 
+/*
+ * Activity is just here to keep the android build
+ * happy until we have an actual service or proper
+ * app to build all this code into.
+ * 
+ * TODO delete me later
+ */
 public class MainActivity extends Activity {
 
   /** Called when the activity is first created. */

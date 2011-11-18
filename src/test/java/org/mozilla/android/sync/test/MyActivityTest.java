@@ -13,6 +13,14 @@ import org.junit.runner.RunWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+/*
+ * This test class is just kept around to show how
+ * robolectric can be used to test the UI. It was
+ * the example used for learning to use robolectric
+ * and could be useful later for testing the app itself.
+ * 
+ * TODO delete me later
+ */
 @RunWith(RobolectricTestRunner.class)
 public class MyActivityTest {
 
